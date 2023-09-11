@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -16,6 +16,8 @@
 		427A8D5D23A6AEBB0096B250 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 427A8D5C23A6AEBB0096B250 /* ResultView.swift */; };
 		427A8D5F23A6AED80096B250 /* Vocabulary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 427A8D5E23A6AED80096B250 /* Vocabulary.swift */; };
 		428E712E23BA5266000F9D75 /* AnswerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428E712D23BA5266000F9D75 /* AnswerButton.swift */; };
+		429119DC2AA74B6400D194A2 /* ClearListBackgroundModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 429119DB2AA74B6400D194A2 /* ClearListBackgroundModifier.swift */; };
+		42932E342AA764DB00A9FB4E /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42932E332AA764DB00A9FB4E /* Test.swift */; };
 		42A0F29A2422209700418EAE /* VocabulariesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42A0F2992422209700418EAE /* VocabulariesView.swift */; };
 		42A9805823C7578900E079D4 /* SpeechView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42A9805723C7578900E079D4 /* SpeechView.swift */; };
 		42A9805A23C762A000E079D4 /* SpeechViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42A9805923C762A000E079D4 /* SpeechViewModel.swift */; };
@@ -33,14 +35,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		42F9DC7E2860769E000AB3B9 /* Embed App Extensions */ = {
+		42F9DC7E2860769E000AB3B9 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
 			);
-			name = "Embed App Extensions";
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -56,6 +58,8 @@
 		427A8D5C23A6AEBB0096B250 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		427A8D5E23A6AED80096B250 /* Vocabulary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Vocabulary.swift; sourceTree = "<group>"; };
 		428E712D23BA5266000F9D75 /* AnswerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AnswerButton.swift; path = DENG/Views/AnswerButton.swift; sourceTree = SOURCE_ROOT; };
+		429119DB2AA74B6400D194A2 /* ClearListBackgroundModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClearListBackgroundModifier.swift; sourceTree = "<group>"; };
+		42932E332AA764DB00A9FB4E /* Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
 		429C6694256813CE009BC6BF /* UIKitCloudKitSharingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKitCloudKitSharingViewController.swift; sourceTree = "<group>"; };
 		42A0F2992422209700418EAE /* VocabulariesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabulariesView.swift; sourceTree = "<group>"; };
 		42A9805723C7578900E079D4 /* SpeechView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpeechView.swift; path = DENG/Models/SpeechView.swift; sourceTree = SOURCE_ROOT; };
@@ -160,9 +164,11 @@
 			isa = PBXGroup;
 			children = (
 				4252C91429BE18AC00302A28 /* ThreeAnswersView.swift */,
+				42932E332AA764DB00A9FB4E /* Test.swift */,
 				42432D91244DE69100A92F2F /* MyVocabularyView.swift */,
 				42C74EF123997BE300550BB3 /* ContentView.swift */,
 				42A0F2992422209700418EAE /* VocabulariesView.swift */,
+				429119DB2AA74B6400D194A2 /* ClearListBackgroundModifier.swift */,
 				429C6694256813CE009BC6BF /* UIKitCloudKitSharingViewController.swift */,
 				4230532F23C6184C001B3E39 /* SimpleTextfield.swift */,
 				42A9805723C7578900E079D4 /* SpeechView.swift */,
@@ -185,7 +191,7 @@
 				42C74EE623997BE300550BB3 /* Sources */,
 				42C74EE723997BE300550BB3 /* Frameworks */,
 				42C74EE823997BE300550BB3 /* Resources */,
-				42F9DC7E2860769E000AB3B9 /* Embed App Extensions */,
+				42F9DC7E2860769E000AB3B9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -202,8 +208,9 @@
 		42C74EE223997BE300550BB3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1320;
-				LastUpgradeCheck = 1320;
+				LastUpgradeCheck = 1430;
 				ORGANIZATIONNAME = "Kersten Weise";
 				TargetAttributes = {
 					42C74EE923997BE300550BB3 = {
@@ -252,7 +259,9 @@
 			files = (
 				4245D69E239D40B4005EF506 /* TimeButton.swift in Sources */,
 				42C74EEE23997BE300550BB3 /* AppDelegate.swift in Sources */,
+				429119DC2AA74B6400D194A2 /* ClearListBackgroundModifier.swift in Sources */,
 				42C702D6239FBDF50083BD1A /* TimeTextfield.swift in Sources */,
+				42932E342AA764DB00A9FB4E /* Test.swift in Sources */,
 				427A8D5F23A6AED80096B250 /* Vocabulary.swift in Sources */,
 				42A9805A23C762A000E079D4 /* SpeechViewModel.swift in Sources */,
 				42C74EF023997BE300550BB3 /* SceneDelegate.swift in Sources */,
@@ -394,6 +403,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -417,7 +427,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.4.1;
 				PRODUCT_BUNDLE_IDENTIFIER = kw.DENG;
 				PRODUCT_NAME = DENGSUI;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -445,7 +455,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.4.1;
 				PRODUCT_BUNDLE_IDENTIFIER = kw.DENG;
 				PRODUCT_NAME = DENGSUI;
 				PROVISIONING_PROFILE_SPECIFIER = "";

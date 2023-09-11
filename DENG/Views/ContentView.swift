@@ -26,7 +26,7 @@ struct ContentView: View {
         
     var body: some View {
         ZStack {
-            Color.blue.edgesIgnoringSafeArea(.all)
+            Color.blue.ignoresSafeArea(.all)
 //            Image("1600px-English_language.svg").resizable().opacity(0.02)
             
             // MARK: Top-Buttons

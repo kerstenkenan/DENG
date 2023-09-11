@@ -466,6 +466,7 @@ class ContentModel : ObservableObject {
             try? FileManager().removeItem(at: url)
         }
         results.removeAll()
+        self.endTitleIsShowing = false
     }
     
     // MARK: Speech
@@ -1071,6 +1072,9 @@ class ContentModel : ObservableObject {
                             fetchedZones.append(zone)
                         case .failure(let err):
                             print("Single zone couldn't be fetched: \(err)")
+                            DispatchQueue.main.async {
+                                self.serviceUnavailableAlert.toggle()
+                            }
                         }
                     }
                     

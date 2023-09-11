@@ -24,43 +24,47 @@ struct VocabulariesView: View {
     @State private var deleteAllAlert = false
     @State private var viewOpacity = 0.0
     
+    init() {
+        if #unavailable(iOS 16.0) {
+            UITableView.appearance().backgroundColor = .clear
+            UINavigationBar.appearance().backgroundColor = .clear
+        }
+    }
+    
     var body: some View {
         NavigationView {
-            ZStack {
-                Color(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1))
-                VStack {
-                    List {
-                        Group {
-                            sharedVocabulary
-                            localVocabulary
-                        }
-                        .opacity(viewOpacity)
+            VStack {
+                List {
+                    Group {
+                        sharedVocabulary
+                        localVocabulary
+                    }.opacity(viewOpacity)
                         .onAppear() {
                             withAnimation(.linear(duration: 1.0)) {
                                 viewOpacity = 1
                             }
                         }
-                        basicVocabulary
-                    }.listStyle(GroupedListStyle()).buttonStyle(BorderlessButtonStyle())
-                }.toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Group {
-                            if contentModel.isPreparingSharing {
-                                ProgressView().progressViewStyle(.circular)
-                            }
+                    basicVocabulary
+                        
+                }.listRowBackground(Color.blue).listStyle(GroupedListStyle()).clearListBackground().buttonStyle(BorderlessButtonStyle())
+            }.toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Group {
+                        if contentModel.isPreparingSharing {
+                            ProgressView().progressViewStyle(.circular)
                         }
                     }
-                }.navigationBarBackButtonHidden(true).navigationBarTitle("Themes").navigationBarItems(trailing: NavigationLink(destination: MyVocabularyView(title: "", list: [Word](), type: .ownVocab, language: .english), isActive: self.$ownVocViewShown, label: {
-                    Image(systemName: "plus.circle").font(.system(size: 25)).foregroundColor(Color.white)
+                }
+            }.background(.blue)
+                .navigationBarTitle("Themes").navigationBarItems(trailing: NavigationLink(destination: MyVocabularyView(title: "", list: [Word](), id: nil, recordID: nil, type: .ownVocab, owner: nil, language: .english), isActive: self.$ownVocViewShown, label: {
+                Image(systemName: "plus.circle").font(.system(size: 25)).foregroundColor(Color.white)
                 }))
-            }.background(Color(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1)))
-                .alert(isPresented: $showICloudAlert, content: {
-                    Alert(title: Text("iCloud-Error"), message: Text("Please get to the settings of your device and enable iCloud for this App. \n\nBitte gehe zu den Einstellungen deines Geräts und aktiviere iCloud für diese App."), dismissButton: .default(Text("OK")))
-                })
-        }.onAppear() {            
-            UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.blue]
-            UINavigationBar.appearance().backgroundColor = UIColor(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1))
-            UITableView.appearance().backgroundColor = UIColor(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1))
+            .alert(isPresented: $showICloudAlert, content: {
+                Alert(title: Text("iCloud-Error"), message: Text("Please get to the settings of your device and enable iCloud for this App. \n\nBitte gehe zu den Einstellungen deines Geräts und aktiviere iCloud für diese App."), dismissButton: .default(Text("OK")))
+            })
+            
+        }.accentColor(Color.white)
+        .onAppear() {
             if UIApplication.shared.applicationIconBadgeNumber > 0 {
                 UIApplication.shared.applicationIconBadgeNumber = 0
             }
@@ -142,7 +146,7 @@ struct VocabulariesView: View {
         }
         return theDate
     }
-   
+    
     //MARK: Shared Vocabulary Stack
     
     private var sharedVocabulary: some View {
@@ -206,11 +210,7 @@ struct VocabulariesView: View {
                                 Image(systemName: self.contentModel.savedToiCloud ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus").frame(width: 30, alignment: .center).font(.system(size: 20, weight: Font.Weight.bold, design: Font.Design.rounded)).foregroundColor(.white)
                             }.sheet(isPresented: $shareButtonPressedShared) {
                                 if let activeShare = self.activeShare {
-                                    UIKitCloudKitSharingViewController(share: activeShare)
-                                        .onAppear() {
-                                            UINavigationBar.appearance().backgroundColor = UIColor(.white)
-                                            UITableView.appearance().backgroundColor = UIColor(.white)
-                                        }
+                                    UIKitCloudKitSharingViewController(share: activeShare).background(.white)
                                         .onDisappear {
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                                 self.contentModel.getVocab()
@@ -234,6 +234,7 @@ struct VocabulariesView: View {
                         Text(self.sharedEditButtonPushed ? "SELECT" : "EDIT").font(.headline).bold().foregroundColor(.yellow)
                     }
                 }
+                .listRowBackground(Color(.clear))
             }
         }
     }
@@ -267,11 +268,7 @@ struct VocabulariesView: View {
         ForEach(self.contentModel.ownVocabulary.sorted(by: { return $0.creationDate > $1.creationDate }), id: \.id) { voc in
             Group {
                 if self.editButtonPushed && voc.fromiCloud {
-                    NavigationLink(destination: MyVocabularyView(title: voc.title, list: voc.words, id: voc.id, recordID: voc.recordID, type: .ownVocab, language: voc.language).onAppear() {
-                        UINavigationBar.appearance().backgroundColor = UIColor(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1))
-                        UITableView.appearance().backgroundColor = UIColor(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1))
-                        
-                    }) {
+                    NavigationLink(destination: MyVocabularyView(title: voc.title, list: voc.words, id: voc.id, recordID: voc.recordID, type: .ownVocab, owner: voc.owner, language: voc.language)) {
                         HStack {
                             Text(voc.title).foregroundColor(.black).font(.system(size: 20, weight: Font.Weight.bold, design: Font.Design.rounded))
                         }
@@ -311,16 +308,16 @@ struct VocabulariesView: View {
                                         print("Fetching single private record failed: \(err.localizedDescription)")
                                     }
                                 }
-
+                                
                             }
                         } label: {
                             Image(systemName: self.contentModel.savedToiCloud ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus").frame(width: 30, alignment: .center).font(.system(size: 20, weight: Font.Weight.bold, design: Font.Design.rounded)).foregroundColor(.white)
                         }.sheet(isPresented: $shareButtonPressedPrivate) {
-                            UIKitCloudKitSharingViewController(share: self.activeShare!)
-                                .onAppear() {
-                                    UINavigationBar.appearance().backgroundColor = UIColor(.white)
-                                    UITableView.appearance().backgroundColor = UIColor(.white)
-                                }
+                            UIKitCloudKitSharingViewController(share: self.activeShare!).background(.white)
+//                                .onAppear() {
+//                                    UINavigationBar.appearance().backgroundColor = UIColor(.white)
+//                                    UITableView.appearance().backgroundColor = UIColor(.white)
+//                                }
                                 .onDisappear {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                         self.contentModel.getVocab()
@@ -356,41 +353,43 @@ struct VocabulariesView: View {
         }
     }
     
-        
+    
     private var localVocabulary: some View {
         Section(header: self.contentModel.ownVocabulary.isEmpty ? nil : ownVocabularyHeader) {
             ownVocabulary
-        }.listRowBackground(Color(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1)))
-        
+                .listRowBackground(Color.clear)
+        }
     }
     
     
     //MARK: Basic Vocabulary Stack
     
     private var basicVocabulary: some View {
-        Section(header: Text("Basics").font(.headline).bold().foregroundColor(.white)) {
+        Section(header: Text("Basics").font(.headline).bold().foregroundColor(.white))
+        {
             ForEach(self.contentModel.basicVocabulary, id: \.id) { voc in
                 HStack {
                     Text(voc.title).foregroundColor(.black).font(.system(size: 20, weight: Font.Weight.bold, design: Font.Design.rounded))
                     Spacer()
                     Button {
                         DispatchQueue.main.async {
-                        if let index = self.contentModel.basicVocabulary.firstIndex(where: { $0.id == voc.id }) {
-                                self.contentModel.basicVocabulary[index].checked.toggle()                                
+                            if let index = self.contentModel.basicVocabulary.firstIndex(where: { $0.id == voc.id }) {
+                                self.contentModel.basicVocabulary[index].checked.toggle()
                             }
                         }
                     } label: {
                         Image(systemName: "checkmark").frame(width: 20, alignment: .center).foregroundColor(voc.checked ? .green : .gray).font(.system(size: 20, weight: Font.Weight.bold, design: Font.Design.rounded))
                     }
                 }
+                .listRowBackground(Color(.clear))
             }
-        }.listRowBackground(Color(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1)))
+        }
     }
 }
 
-//struct VocabulariesView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        VocabulariesView().environmentObject(ContentModel())
-//    }
-//}
+struct VocabulariesView_Previews: PreviewProvider {
+    static var previews: some View {
+        VocabulariesView().environmentObject(ContentModel())
+    }
+}
 
