@@ -314,10 +314,6 @@ struct VocabulariesView: View {
                             Image(systemName: self.contentModel.savedToiCloud ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus").frame(width: 30, alignment: .center).font(.system(size: 20, weight: Font.Weight.bold, design: Font.Design.rounded)).foregroundColor(.white)
                         }.sheet(isPresented: $shareButtonPressedPrivate) {
                             UIKitCloudKitSharingViewController(share: self.activeShare!).background(.white)
-//                                .onAppear() {
-//                                    UINavigationBar.appearance().backgroundColor = UIColor(.white)
-//                                    UITableView.appearance().backgroundColor = UIColor(.white)
-//                                }
                                 .onDisappear {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                         self.contentModel.getVocab()
