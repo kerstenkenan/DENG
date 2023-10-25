@@ -18,7 +18,7 @@ struct ThreeAnswersView: View {
                 Spacer()
                 HStack {
                     Group {
-                        if contentModel.showGermanWord {
+                        if contentModel.showGermanWordFirst {
                             ForEach(contentModel.imageArr.reversed(), id: \.self) { sig in
                                 Text(sig).font(.system(size: 30)).foregroundColor(Color.white)
                             }
@@ -29,7 +29,7 @@ struct ThreeAnswersView: View {
                         }
                     }
                 }
-                Text(contentModel.showGermanWord ? contentModel.germanWord : contentModel.englishWord).font(Font.system(size: 35, weight: .heavy, design: .rounded))
+                Text(contentModel.showGermanWordFirst ? contentModel.germanWord : contentModel.originalWord).font(Font.system(size: 35, weight: .heavy, design: .rounded))
                     .lineLimit(2)
                     .minimumScaleFactor(0.5)
                     .multilineTextAlignment(.center)
@@ -42,7 +42,7 @@ struct ThreeAnswersView: View {
                 HStack {
                     VStack {
                         HStack {
-                            if contentModel.showGermanWord {
+                            if contentModel.showGermanWordFirst {
                                 ForEach(contentModel.imageArr.reversed(), id: \.self) { sig in
                                     Text(sig).font(.system(size: 30)).foregroundColor(Color.white).minimumScaleFactor(0.5)
                                 }
@@ -52,7 +52,7 @@ struct ThreeAnswersView: View {
                                 }
                             }
                         }
-                        Text(contentModel.showGermanWord ? contentModel.germanWord : contentModel.englishWord)
+                        Text(contentModel.showGermanWordFirst ? contentModel.germanWord : contentModel.originalWord)
                             .font(Font.system(size: 35, weight: .heavy, design: .rounded))
                             .lineLimit(2)
                             .minimumScaleFactor(0.5)

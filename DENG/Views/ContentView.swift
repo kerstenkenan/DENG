@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var showingSpeechAlert = false
     @State private var speakerSelected = true
     @State private var showingVocabularies = false
+    @State private var showingLanguageMenu = false
     
     @EnvironmentObject var content : ContentModel
     
@@ -27,13 +28,27 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             Color.blue.ignoresSafeArea(.all)
-//            Image("1600px-English_language.svg").resizable().opacity(0.02)
-            
             // MARK: Top-Buttons
             GeometryReader { geo in
                 VStack {
                     HStack {
                         Spacer()
+                        Button {
+                            showingLanguageMenu.toggle()
+                        } label: {
+                            Menu {
+                                Button("English", action: { self.changeLanguageTo(.english) })
+                                Button("Français", action: { self.changeLanguageTo(.francais) })
+                            } label: {
+                                Image(systemName: "abc")
+                                    .frame(width: 35, height: 35)
+                                    .imageScale(.small)
+                                    .foregroundColor(Color.black)
+                                    .background(Circle())
+                                    .shadow(color: Color(#colorLiteral(red: 0.2096882931, green: 0.2096882931, blue: 0.2096882931, alpha: 1)), radius: 2, x: 1, y: 1)
+                                    .padding()
+                            }
+                        }.disabled(self.content.insideRound)
                         Button(action: {
                             self.showingVocabularies.toggle()
                             self.content.shouldReadAloud = false
@@ -41,8 +56,10 @@ struct ContentView: View {
                             UserDefaults.standard.set(0, forKey: "bagdeNumber")
                         }) {
                             Image(systemName: "plus.square.on.square")
-                                .foregroundColor(Color.black).scaleEffect(1.2)
-                                .background(Circle().frame(width: 35, height: 35))
+                                .frame(width: 35, height: 35)
+                                .foregroundColor(Color.black)
+                                .imageScale(.medium)
+                                .background(Circle())
                                 .shadow(color: Color(#colorLiteral(red: 0.2096882931, green: 0.2096882931, blue: 0.2096882931, alpha: 1)), radius: 2, x: 1, y: 1)
                                 .padding()
                         }.sheet(isPresented: self.$showingVocabularies, onDismiss: {
@@ -60,9 +77,10 @@ struct ContentView: View {
                             Group {
                                 self.speakerSelected ? Image(systemName: "speaker.3") : Image(systemName: "speaker.slash")
                             }
-                            .scaleEffect(1.2)
+                            .frame(width: 35, height: 35)
+                            .imageScale(.medium)
                             .foregroundColor(Color.black)
-                            .background(Circle().frame(width: 35, height: 35))
+                            .background(Circle())
                             .shadow(color: Color(#colorLiteral(red: 0.2096882931, green: 0.2096882931, blue: 0.2096882931, alpha: 1)), radius: 2, x: 1, y: 1)
                             .padding()
                         }
@@ -70,8 +88,13 @@ struct ContentView: View {
                             self.content.resultsanswerButtonPressed.toggle()
                             self.content.getResults()
                         }) {
-                            Image("trophae").scaleEffect(0.75).foregroundColor(Color.black).background(Circle()).frame(width: 35, height: 35).shadow(color: Color(#colorLiteral(red: 0.2096882931, green: 0.2096882931, blue: 0.2096882931, alpha: 1)), radius: 2, x: 1, y: 1)
-                                .padding(0.5)
+                            Image(systemName: "trophy")
+                                .frame(width: 35, height: 35)
+                                .imageScale(.medium)
+                                .foregroundColor(Color.black)
+                                .background(Circle())
+                                .shadow(color: Color(#colorLiteral(red: 0.2096882931, green: 0.2096882931, blue: 0.2096882931, alpha: 1)), radius: 2, x: 1, y: 1)
+                                .padding()
                         }.sheet(isPresented: self.$content.resultsanswerButtonPressed, onDismiss: {
                             if self.content.endTitleIsShowing {
                                 self.content.points = 0
@@ -87,30 +110,29 @@ struct ContentView: View {
                     // MARK: Point-Label
                     HStack {
                         Group {
-                            Text("Punkte:").fixedSize()
+                            Text("Punkte:")
                             Text(String(self.content.points))
                                 .frame(height: 30, alignment: .leading)
                         }.font(Font.system(size: 25, weight: .bold, design: .rounded))
-                        .lineLimit(1)
-                        .foregroundColor(Color(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1)))
-                        .shadow(color: .black, radius: 3, x: 1, y: 1)
-                        .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
+                            .lineLimit(1)
+                            .foregroundColor(Color(#colorLiteral(red: 0.2148060138, green: 0.5517488729, blue: 1, alpha: 1)))
+                            .shadow(color: .black, radius: 3, x: 1, y: 1)
+                            .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
                         Spacer()
                     }
-                    
                     // MARK: Answer-Buttons
                     VStack {
                         Group {
-                                switch content.states {
-                                case .threeanswers:
-                                    ThreeAnswersView(verticalSizeClass: self.verticalSizeClass)
-                                case .speech:
-                                    SpeechView()
-                                case .textfield:
-                                    SimpleTextfield()
-                                }
+                            switch content.states {
+                            case .threeanswers:
+                                ThreeAnswersView(verticalSizeClass: self.verticalSizeClass)
+                            case .speech:
+                                SpeechView()
+                            case .textfield:
+                                SimpleTextfield()
                             }
                         }
+                    }
                     // MARK: TimeFields
                     HStack {
                         TimeTextfield(content: self.content).frame(width: 85, alignment: Alignment.leading)
@@ -118,9 +140,10 @@ struct ContentView: View {
                             $0
                         }
                     }
-                }
+                }.ignoresSafeArea(.keyboard)
+                .frame(height: geo.size.height)
             }
-        }.ignoresSafeArea(.keyboard)
+        }
         .onAppear {
             print("Speaker: \(self.speakerSelected)")
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, err in
@@ -167,7 +190,6 @@ struct ContentView: View {
         .alert("iCloud-Error", isPresented: $content.showiCloudAlert, actions: {
             Button("OK", role: .cancel, action: {
                 self.content.newWord()
-                print("Done")
             })
         }, message: {
             Text("Please get to the settings of your device and enable iCloud for this App. \n\nBitte gehe zu den Einstellungen deines Geräts und aktiviere iCloud für diese App.")
@@ -177,10 +199,41 @@ struct ContentView: View {
                 self.content.newWord()
             })
         }, message: {
-            Text("Service is momentary unavailable. \n\niCloud ist momentan nicht erreichbar.")
+            Text("iCloud-Services are momentary unavailable. \n\niCloud ist momentan nicht erreichbar.")
         })
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+    }
+    
+    private func changeLanguageTo(_ lang: Language) {
+        self.content.actualWordsList.removeAll()
+        DispatchQueue.main.async {
+            if lang == .english {
+                self.content.chosenLanguage = .english
+                UserDefaults.standard.setValue(self.content.chosenLanguage.rawValue, forKey: "chosenLanguage")
+                self.content.imageArr = ["🇬🇧", "→", "🇩🇪"]
+                if SceneDelegate.gotInternetOnce {
+                    self.content.getVocab()
+                } else {
+                    self.content.ownVocabulary = self.content.ownVocabulary.filter( { $0.language == . english })
+                    self.content.sharedVocabulary = self.content.sharedVocabulary.filter( { $0.language == . english })
+                    self.content.basicVocabulary = self.content.getVocsFromDisk(in: .basicVocab)
+                    self.content.newWord()
+                }
+            } else {
+                self.content.chosenLanguage = .francais
+                UserDefaults.standard.setValue(self.content.chosenLanguage.rawValue, forKey: "chosenLanguage")
+                self.content.imageArr = ["🇫🇷", "→", "🇩🇪"]
+                if SceneDelegate.gotInternetOnce {
+                    self.content.getVocab()
+                } else {
+                    self.content.ownVocabulary = self.content.ownVocabulary.filter( { $0.language == . francais })
+                    self.content.sharedVocabulary = self.content.sharedVocabulary.filter( { $0.language == . francais })
+                    self.content.basicVocabulary = self.content.getVocsFromDisk(in: .basicVocab)
+                    self.content.newWord()
+                }
+            }
         }
     }
 }

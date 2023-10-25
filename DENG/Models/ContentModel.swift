@@ -25,15 +25,14 @@ enum VocabType: String, Codable {
 }
 
 enum Language: String, Codable {
-    case english
-    case francais
+    case english = "english"
+    case francais = "francais"
 }
 
 struct Word : Codable {
     var id = UUID()
-    var english: String
+    var original: String
     var german: String
-    var counter: Int
 }
 
 struct Score: Codable, Hashable {
@@ -42,7 +41,10 @@ struct Score: Codable, Hashable {
     var minutes: String
 }
 
-struct Vocab: Codable, Equatable {
+struct Vocab: Codable, Equatable, Comparable {
+    static func < (lhs: Vocab, rhs: Vocab) -> Bool {
+        return lhs.title < rhs.title
+    }
     static func == (lhs: Vocab, rhs: Vocab) -> Bool {
         return lhs.id == rhs.id
     }
@@ -67,7 +69,7 @@ class ContentModel : ObservableObject {
     //MARK: Properties
     
     @Published var isHidden = true
-    @Published var englishWord = ""
+    @Published var originalWord = ""
     @Published var germanWord = ""
     @Published var answers = ["First Answer", "Second Answer", "Third Answer"]
     @Published var answerButtons = [AnswerButton]()
@@ -80,7 +82,7 @@ class ContentModel : ObservableObject {
     @Published var resultsanswerButtonPressed = false
     @Published var wordColor = Color.black
     @Published var shouldSpringWord = false
-    @Published var showGermanWord = false
+    @Published var showGermanWordFirst = false
     @Published var savedToiCloud = false
     @Published var showiCloudAlert = false
     @Published var serviceUnavailableAlert = false
@@ -94,12 +96,18 @@ class ContentModel : ObservableObject {
     @Published var ownVocabulary = [Vocab]()
     @Published var sharedVocabulary = [Vocab]()
     var holeVocabulary : [Word]!
-    var actualWordsList : [Word]?
+    var actualWordsList = [Word]()
     var actualWordIndex : Int!
     var actualWord : Word!
     var firstTime = true
     var vocabListIsShown = false
     
+    var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    var recognitionTask: SFSpeechRecognitionTask?
+    let audioEngine = AVAudioEngine()
+    var inputNode : AVAudioInputNode?
+    var audioSession = AVAudioSession.sharedInstance()
+    var session : AVCaptureSession?
     
     var counting : AVAudioPlayer?
     var gameover : AVAudioPlayer?
@@ -111,17 +119,9 @@ class ContentModel : ObservableObject {
     
     //MARK: Speechrecognizer
     
-    let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-GB"))
-    var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    var recognitionTask: SFSpeechRecognitionTask?
-    let audioEngine = AVAudioEngine()
-    var inputNode : AVAudioInputNode?
-    var audioSession = AVAudioSession.sharedInstance()
-    var session : AVCaptureSession?
-    
     var speechSynthesizer : AVSpeechSynthesizer!
     
-    var imageArr = ["🇬🇧", "→", "🇩🇪"]
+    var imageArr = [String]()
     var counter = 0
     @Published var insideRound = false
     @Published var shouldReadAloud = true
@@ -130,6 +130,8 @@ class ContentModel : ObservableObject {
     private var notificationCenter : NotificationCenter?
     @Published var keyboardHeight : CGFloat = 0
     @Published var keyboardTime : Double = 0.0
+    
+    @Published var chosenLanguage : Language = .english
     
     //MARK: Main initializer
     
@@ -184,14 +186,20 @@ class ContentModel : ObservableObject {
         var words = [Word]()
         list.forEach { element in
             element.forEach { (key, value) in
-                words.append(Word(english: key, german: value, counter: 0))
+                words.append(Word(original: key, german: value))
             }
         }
         return words
     }
     
-    private func getBasicVocabulary() {
-        basicVocabulary = [Vocab(id: UUID(), title: "Basic vocabulary", type: .basicVocab, words: convert(list: Vocabulary.basics), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Free time", type: .basicVocab, words: convert(list: Vocabulary.freeTime), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "At school", type: .basicVocab, words: convert(list: Vocabulary.atSchool), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "The body", type: .basicVocab, words: convert(list: Vocabulary.theBody), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Food and Drink", type: .basicVocab, words: convert(list: Vocabulary.foodAndDrink), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Time", type: .basicVocab, words: convert(list: Vocabulary.time), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "At home", type: .basicVocab, words: convert(list: Vocabulary.atHome), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Places", type: .basicVocab, words: convert(list: Vocabulary.places), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Weather", type: .basicVocab, words: convert(list: Vocabulary.weather), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Animals", type: .basicVocab, words: convert(list: Vocabulary.animals), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Shopping", type: .basicVocab, words: convert(list: Vocabulary.shopping), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Clothes", type: .basicVocab, words: convert(list: Vocabulary.clothes), language: .english, checked: true, fromiCloud: false)]
+    private func getBasicVocabulary(from language: Language) {
+        print(#function)
+        switch language {
+        case .english:
+            basicVocabulary = [Vocab(id: UUID(), title: "Basic vocabulary", type: .basicVocab, words: convert(list: Vocabulary.basics), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Free time", type: .basicVocab, words: convert(list: Vocabulary.freeTime), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "At school", type: .basicVocab, words: convert(list: Vocabulary.atSchool), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "The body", type: .basicVocab, words: convert(list: Vocabulary.theBody), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Food and Drink", type: .basicVocab, words: convert(list: Vocabulary.foodAndDrink), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Time", type: .basicVocab, words: convert(list: Vocabulary.time), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "At home", type: .basicVocab, words: convert(list: Vocabulary.atHome), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Places", type: .basicVocab, words: convert(list: Vocabulary.places), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Weather", type: .basicVocab, words: convert(list: Vocabulary.weather), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Animals", type: .basicVocab, words: convert(list: Vocabulary.animals), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Shopping", type: .basicVocab, words: convert(list: Vocabulary.shopping), language: .english, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Clothes", type: .basicVocab, words: convert(list: Vocabulary.clothes), language: .english, checked: true, fromiCloud: false)]
+        case .francais:
+            basicVocabulary = [Vocab(id: UUID(), title: "Vocabulaire de base", type: .basicVocab, words: convert(list: Vocabulary.francaisBase), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "La famille", type: .basicVocab, words: convert(list: Vocabulary.famille), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Le commerce", type: .basicVocab, words: convert(list: Vocabulary.commerce), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Le métier", type: .basicVocab, words: convert(list: Vocabulary.metier), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Le corps", type: .basicVocab, words: convert(list: Vocabulary.corps), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "La santé", type: .basicVocab, words: convert(list: Vocabulary.sante), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "La politesse", type: .basicVocab, words: convert(list: Vocabulary.politesse), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "L'allocution", type: .basicVocab, words: convert(list: Vocabulary.allocution), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "En vacances", type: .basicVocab, words: convert(list: Vocabulary.vacances), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Le restaurant", type: .basicVocab, words: convert(list: Vocabulary.restaurant), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "L'école", type: .basicVocab, words: convert(list: Vocabulary.ecole), language: .francais, checked: true, fromiCloud: true), Vocab(id: UUID(), title: "Les loisirs", type: .basicVocab, words: convert(list: Vocabulary.loisirs), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "Le temps", type: .basicVocab, words: convert(list: Vocabulary.temps), language: .francais, checked: true, fromiCloud: false), Vocab(id: UUID(), title: "La maison", type: .basicVocab, words: convert(list: Vocabulary.maison), language: .francais, checked: true, fromiCloud: false)]
+        }
     }
     
     private func makeWordList() -> [Word] {
@@ -219,7 +227,6 @@ class ContentModel : ObservableObject {
         }
         return wordList
     }
-    
     
     func getAllWords() -> [Word] {
         var vocabulary = [Word]()
@@ -249,21 +256,17 @@ class ContentModel : ObservableObject {
         print(#function)
         wordColor = .black
         shouldSpringWord = false
-        if basicVocabulary.isEmpty {
-            getBasicVocabulary()
-        }
+//        if basicVocabulary.isEmpty {
+//            getBasicVocabulary(from: chosenLanguage)
+//        }
         holeVocabulary = getAllWords()
-        actualWordsList = makeWordList()
-        
-        guard let actualWordsList = actualWordsList else {
-            print("Couldn't generate a new word: \(String(describing: actualWordsList))")
-            return
+        if actualWordsList.isEmpty {
+            actualWordsList = makeWordList()
         }
-        
-        if let index = actualWordsList.indices.randomElement() {
+        if let index = self.actualWordsList.indices.randomElement() {
             actualWordIndex = index
             actualWord = actualWordsList[index]
-            englishWord = actualWord.english
+            originalWord = actualWord.original
             germanWord = actualWord.german
         }
         
@@ -275,23 +278,24 @@ class ContentModel : ObservableObject {
         if counter == randomNumber1! || counter == range1.max()! {
             states = .textfield
             counter = -1
+            showGermanWordFirst.toggle()
         } else if counter == randomNumber2! || counter == range2.max()! {
-            showGermanWord = false
             states = .speech
             counter = 4
+            showGermanWordFirst.toggle()
         }  else {
             states = .threeanswers
         }
         
         guard let randomNum = (0...2).randomElement() else { return }
-        if !showGermanWord {
+        if !showGermanWordFirst {
             answers[randomNum] = germanWord
         } else {
-            answers[randomNum] = englishWord
+            answers[randomNum] = originalWord
         }
         for i in 0..<answers.count {
             if i != randomNum {
-                if !showGermanWord {
+                if !showGermanWordFirst {
                     repeat
                     {
                         answers[i] = holeVocabulary.randomElement()!.german
@@ -299,7 +303,7 @@ class ContentModel : ObservableObject {
                 } else {
                     repeat
                     {
-                        answers[i] = holeVocabulary.randomElement()!.english
+                        answers[i] = holeVocabulary.randomElement()!.original
                     } while answers[i] == answers[randomNum]
                 }
             }
@@ -307,12 +311,36 @@ class ContentModel : ObservableObject {
         self.answerButtons = [AnswerButton(content: self, title: answers[0]), AnswerButton(content: self, title: answers[1]), AnswerButton(content: self, title: answers[2])]
     }
     
-    func checkText(text: String, id: UUID?, points: Int) {
-        guard var actualWordsList = actualWordsList else {
-            print("Couldn't check text.")
-            return
+    
+    func cleanUpWords(text: String, fromStrings: [String]) -> String {
+        var finalText = text
+        for i in 0..<fromStrings.count {
+            finalText = finalText.replacingOccurrences(of: fromStrings[i], with: "")
         }
-        if (showGermanWord ? englishWord : germanWord).lowercased().contains(text.lowercased()) {
+        return finalText
+    }
+    
+    func divideSingleWords(text: String) -> [String] {
+        let charSet = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+        let wordsFromText = text.components(separatedBy: charSet).filter { !$0.isEmpty }
+        return wordsFromText
+    }
+    
+    func checkText(text: String, id: UUID?, points: Int) {
+        var wordsFit : Bool
+        var didSpellWordRight = false
+                
+        switch self.states {
+        case .speech:
+            wordsFit = self.divideSingleWords(text: text).elementsEqual(self.divideSingleWords(text: self.originalWord), by: { $0.lowercased() == $1.lowercased() })
+            didSpellWordRight = wordsFit
+        case .textfield:
+            wordsFit = divideSingleWords(text: self.chosenLanguage == .english ? text : cleanUpWords(text: text, fromStrings: ["(f)", "(m)", "(pl)"])) == divideSingleWords(text: self.chosenLanguage == .english ? self.originalWord : cleanUpWords(text: self.originalWord, fromStrings: ["(f)", "(m)", "(pl)"]))
+        case .threeanswers:
+            wordsFit = text == (self.showGermanWordFirst ? self.originalWord : self.germanWord)
+        }
+        
+        if wordsFit {
             win?.play()
             if id != nil {
                 for i in 0..<answerButtons.count {
@@ -326,26 +354,16 @@ class ContentModel : ObservableObject {
                 self.wordColor = .green
                 self.shouldSpringWord = true
             }
-            
-            if actualWord.counter == 0 {
-                if insideRound {
-                    actualWordsList.remove(at: actualWordIndex)
-                }
-            } else {
-                actualWord.counter -= 1
-            }
-            
-            countPoints(points: points, handler: {
-                if self.states == .textfield {
-                    self.showGermanWord = true
-                }
+            countPoints(points: points) {
+                self.actualWordsList.remove(at: self.actualWordIndex)
                 self.newWord()
-            })
+            }
         } else {
             gameover?.play()
             if id != nil {
                 for i in 0..<answerButtons.count {
-                    if (showGermanWord ? englishWord : germanWord).lowercased().contains(answerButtons[i].title.lowercased()) {
+                    print(text, answerButtons[i].title)
+                    if (self.showGermanWordFirst ? self.originalWord : self.germanWord) == answerButtons[i].title {
                         answerButtons[i].backgroundColor = Color.green
                     } else {
                         answerButtons[i].backgroundColor = Color.red
@@ -353,24 +371,16 @@ class ContentModel : ObservableObject {
                 }
             } else {
                 self.wordColor = .red
-                self.showGermanWord = true
                 self.shouldSpringWord = true
             }
-            
-            switch actualWord.counter {
-            case 0:
-                actualWord.counter = 3
-            default: actualWord.counter -= 1
-            }
-            
-            countPoints(points: -points, handler: {
+            countPoints(points: -points) {
                 self.newWord()
-            })
-        }
-        if shouldReadAloud {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.readAloud(word: self.englishWord)
             }
+        }
+        if shouldReadAloud && !didSpellWordRight {
+            let wordToSpeak = cleanUpWords(text: self.originalWord, fromStrings: ["(m)", "(f)", "(pl)"])
+            print(wordToSpeak)
+            self.readAloud(word: wordToSpeak)
         }
     }
     
@@ -472,9 +482,16 @@ class ContentModel : ObservableObject {
     // MARK: Speech
     
     func readAloud(word: String) {
+        var languageString : String
+        switch self.chosenLanguage {
+        case .english:
+            languageString = "en-US"
+        case .francais:
+            languageString = "fr-FR"
+        }
         let speechUtterance = AVSpeechUtterance(string: word)
-        speechUtterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        speechUtterance.rate = AVSpeechUtteranceDefaultSpeechRate -  0.15
+        speechUtterance.voice = AVSpeechSynthesisVoice(language: languageString)
+        speechUtterance.rate = AVSpeechUtteranceDefaultSpeechRate - 0.2
         speechSynthesizer = AVSpeechSynthesizer()
         speechSynthesizer.speak(speechUtterance)
     }
@@ -507,12 +524,14 @@ class ContentModel : ObservableObject {
                 minInteger = 0
                 self.time = "\(String(format: "%02d", minInteger))" + ":" + "\(String(format: "%02d", sek))"
                 self.setResults(min: min) {
-                    self.endTitleIsShowing = true
-                    self.resultsanswerButtonPressed.toggle()
-                    for timebutton in self.timeButtons {
-                        timebutton.timeButtonModel.selected = false
+                    DispatchQueue.main.async {
+                        self.endTitleIsShowing = true
+                        self.resultsanswerButtonPressed.toggle()
+                        for timebutton in self.timeButtons {
+                            timebutton.timeButtonModel.selected = false
+                        }
+                        self.insideRound = false
                     }
-                    self.insideRound = false
                     timer.invalidate()
                 }
             }
@@ -707,8 +726,10 @@ class ContentModel : ObservableObject {
         fetchPrivateAndSharedVocabs(complete: complete, fromZone: withZone) { result in
             switch result {
             case .success((let privatVocabs, let sharedVocabs)):
-                ownVocabFromiCloud = privatVocabs
-                sharedVocabfromiCloud = sharedVocabs
+                ownVocabFromiCloud = privatVocabs.filter { $0.language == self.chosenLanguage }
+                sharedVocabfromiCloud = sharedVocabs.filter { $0.language == self.chosenLanguage }
+//                ownVocabFromiCloud = privatVocabs
+//                sharedVocabfromiCloud = sharedVocabs
                 DispatchQueue.main.async {
                     self.ownVocabulary.removeAll()
                     self.sharedVocabulary.removeAll()
@@ -722,6 +743,16 @@ class ContentModel : ObservableObject {
                     self.ownVocabulary = self.rmDuplicates(vocs: ownVocabFromiCloud)
                     self.sharedVocabulary = self.rmDuplicates(vocs: sharedVocabfromiCloud)
                     self.basicVocabulary = self.getVocsFromDisk(in: .basicVocab)
+                    switch self.chosenLanguage {
+                    case .english:
+                        if self.basicVocabulary.count < 12 {
+                            self.getBasicVocabulary(from: self.chosenLanguage)
+                        }
+                    case .francais:
+                        if self.basicVocabulary.count < 14 {
+                            self.getBasicVocabulary(from: self.chosenLanguage)
+                        }
+                    }
                     self.insideRound = false
                     
                     if let err = lastError {
@@ -750,7 +781,10 @@ class ContentModel : ObservableObject {
                 do {
                     try files.forEach { file in
                         let jsonData = try Data(contentsOf: file)
-                        vocabs.append(try JSONDecoder().decode(Vocab.self, from: jsonData))
+                        let vocab = (try JSONDecoder().decode(Vocab.self, from: jsonData))
+                        if vocab.language == self.chosenLanguage {
+                            vocabs.append(vocab)
+                        }
                     }
                 } catch {
                     print("Couldn't not decode files in \(directory.rawValue): \(error)")
@@ -758,6 +792,17 @@ class ContentModel : ObservableObject {
             }
         }
         for i in 0..<vocabs.count {
+            vocabs[i].fromiCloud = false
+        }
+        vocabs = vocabs.sorted()
+        for i in 0..<vocabs.count {
+            if vocabs[i].title == "Basic vocabulary" || vocabs[i].title == "Vocabulaire de base" {
+                vocabs[i].fromiCloud = false
+                if i != 0 {
+                    vocabs.insert(vocabs[i], at: 0)
+                    vocabs.remove(at: i + 1)
+                }
+            }
             vocabs[i].fromiCloud = false
         }
         return vocabs
@@ -1073,7 +1118,7 @@ class ContentModel : ObservableObject {
                         case .failure(let err):
                             print("Single zone couldn't be fetched: \(err)")
                             DispatchQueue.main.async {
-                                self.serviceUnavailableAlert.toggle()
+                                self.basicVocabulary = self.getVocsFromDisk(in: .basicVocab)
                             }
                         }
                     }

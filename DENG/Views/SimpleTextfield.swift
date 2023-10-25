@@ -20,7 +20,7 @@ struct SimpleTextfield: View {
         GeometryReader { geo in
             VStack {
                 Group {
-                    Text(self.content.showGermanWord ? self.content.germanWord : self.content.englishWord)
+                    Text(self.content.shouldSpringWord ? self.content.originalWord : self.content.germanWord)
                         .font(Font.system(size: 35, weight: .heavy, design: .rounded))
                         .frame(width: geo.size.width)
                         .lineLimit(nil)
@@ -43,9 +43,10 @@ struct SimpleTextfield: View {
                         .background(Color(#colorLiteral(red: 0.2392156869, green: 0.6745098233, blue: 0.9686274529, alpha: 1)))
                         .cornerRadius(25)
                         .shadow(color: .black, radius: 5, x: 1, y: 1)
-                }.offset(y: geo.size.height < (self.content.keyboardHeight + (self.content.keyboardHeight / 4)) ? -self.content.keyboardHeight / 3 : 0)
+
+                }
+                .offset(y: geo.size.height < (self.content.keyboardHeight + (self.content.keyboardHeight / 4)) ? -self.content.keyboardHeight / 3 : 0)
                     .animation(.easeInOut(duration: self.content.keyboardTime), value: self.content.keyboardHeight)
-                
             }
         }
     }

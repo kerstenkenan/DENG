@@ -22,7 +22,6 @@ struct ResultView: View {
             ZStack {
                 Color.blue.ignoresSafeArea()
                 VStack() {
-//                    Image("trophae").resizable().frame(width: 100, height: 100).foregroundColor(.yellow).rotationEffect(Angle.init(degrees: 20)).background(.red)
                     if self.content.endTitleIsShowing {
                         VStack {
                             Text("Herzlichen Glückwunsch, Du hast folgende Punktzahl erreicht: ")

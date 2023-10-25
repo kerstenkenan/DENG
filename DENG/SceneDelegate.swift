@@ -30,12 +30,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let windowScene = scene as? UIWindowScene {
             self.makeWindow(scene: windowScene)
         }
-        
-//        if let metaData = connectionOptions.cloudKitShareMetadata?.participantStatus {
-//            if metaData == .pending {
-//                let acceptOp = CKAccep
-//            }
-//        }
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -62,6 +56,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
+        switch UserDefaults.standard.string(forKey: "chosenLanguage") {
+            case "english":
+            self.contentModel.chosenLanguage = .english
+            self.contentModel.imageArr = ["🇬🇧", "→", "🇩🇪"]
+            case "francais":
+            self.contentModel.chosenLanguage = .francais
+            self.contentModel.imageArr = ["🇫🇷", "→", "🇩🇪"]
+            default: break
+        }
         monitor.pathUpdateHandler = { path in
             switch path.status {
             case .satisfied:
@@ -79,6 +82,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     }
                     for i in 0..<self.contentModel.sharedVocabulary.count {
                         self.contentModel.sharedVocabulary[i].fromiCloud = false
+                    }
+                    
+                    switch self.contentModel.chosenLanguage {
+                    case .english:
+                        self.contentModel.ownVocabulary = self.contentModel.ownVocabulary.filter( { $0.language == . english })
+                        self.contentModel.sharedVocabulary = self.contentModel.sharedVocabulary.filter( { $0.language == . english })
+                    case .francais:
+                        self.contentModel.ownVocabulary = self.contentModel.ownVocabulary.filter( { $0.language == . francais })
+                        self.contentModel.sharedVocabulary = self.contentModel.sharedVocabulary.filter( { $0.language == . francais })
                     }
                     self.contentModel.basicVocabulary = self.contentModel.getVocsFromDisk(in: .basicVocab)
                     self.contentModel.newWord()

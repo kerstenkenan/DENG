@@ -56,7 +56,7 @@ struct VocabulariesView: View {
                     }
                 }
             }.background(.blue)
-                .navigationBarTitle("Themes").navigationBarItems(trailing: NavigationLink(destination: MyVocabularyView(title: "", list: [Word](), id: nil, recordID: nil, type: .ownVocab, owner: nil, language: .english), isActive: self.$ownVocViewShown, label: {
+                .navigationBarTitle("Themes").navigationBarItems(trailing: NavigationLink(destination: MyVocabularyView(title: "", list: [Word](), id: nil, recordID: nil, type: .ownVocab, owner: nil, language: self.contentModel.chosenLanguage), isActive: self.$ownVocViewShown, label: {
                 Image(systemName: "plus.circle").font(.system(size: 25)).foregroundColor(Color.white)
                 }))
             .alert(isPresented: $showICloudAlert, content: {
@@ -226,7 +226,7 @@ struct VocabulariesView: View {
         } header: {
             if !contentModel.sharedVocabulary.isEmpty {
                 HStack {
-                    Text("Shared Vocabulary").font(.headline).bold().foregroundColor(.white)
+                    Text(self.contentModel.chosenLanguage == .english ? "Shared Vocabulary" : "Vocabulaire partagé").font(.headline).bold().foregroundColor(.white)
                     Spacer()
                     Button(action: {
                         self.sharedEditButtonPushed.toggle()
@@ -244,7 +244,7 @@ struct VocabulariesView: View {
     
     private var ownVocabularyHeader: some View {
         HStack {
-            Text("Own Vocabulary").font(.headline).bold().foregroundColor(.white)
+            Text(self.contentModel.chosenLanguage == .english ? "Own Vocabulary" : "Popre vocabulaire").font(.headline).bold().foregroundColor(.white)
             Button {
                 self.deleteAllAlert.toggle()
             } label: {
@@ -282,6 +282,7 @@ struct VocabulariesView: View {
                             DispatchQueue.main.async {
                                 if let index = self.contentModel.ownVocabulary.firstIndex(where:  { $0.id == voc.id }) {
                                     self.contentModel.ownVocabulary[index].checked.toggle()
+                                    self.contentModel.actualWordsList.removeAll()
                                 }
                             }
                         } label: {
@@ -302,6 +303,7 @@ struct VocabulariesView: View {
                                         } else {
                                             self.shareRecord(record: rec, title: voc.title, in: .private) {
                                                 self.shareButtonPressedPrivate.toggle()
+                                                self.contentModel.actualWordsList.removeAll()
                                             }
                                         }
                                     case .failure(let err):
@@ -361,7 +363,7 @@ struct VocabulariesView: View {
     //MARK: Basic Vocabulary Stack
     
     private var basicVocabulary: some View {
-        Section(header: Text("Basics").font(.headline).bold().foregroundColor(.white))
+        Section(header: Text(self.contentModel.chosenLanguage == .english ? "Basics" : "Bases").font(.headline).bold().foregroundColor(.white))
         {
             ForEach(self.contentModel.basicVocabulary, id: \.id) { voc in
                 HStack {
@@ -371,6 +373,7 @@ struct VocabulariesView: View {
                         DispatchQueue.main.async {
                             if let index = self.contentModel.basicVocabulary.firstIndex(where: { $0.id == voc.id }) {
                                 self.contentModel.basicVocabulary[index].checked.toggle()
+                                self.contentModel.actualWordsList.removeAll()
                             }
                         }
                     } label: {

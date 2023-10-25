@@ -12,18 +12,20 @@ import Speech
 
 extension ContentModel {
     func hearWord(word: String) {
-        if let recognitionTask = recognitionTask {
+        let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: self.chosenLanguage == .english ? "en-GB" : "fr-FR"))
+        
+        if let recognitionTask = self.recognitionTask {
             recognitionTask.cancel()
             self.recognitionTask = nil
         }
         
-        if let speechRecognizer = self.speechRecognizer  {
+        if let speechRecognizer = speechRecognizer  {
             if speechRecognizer.isAvailable {
                 try? audioSession.setCategory(.playAndRecord)
                 try? audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-                self.inputNode = audioEngine.inputNode
+                inputNode = self.audioEngine.inputNode
                 
-                self.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+                recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
                 guard let recognitionRequest = recognitionRequest else { return }
                 recognitionRequest.shouldReportPartialResults = true
                 var counter = 0
@@ -41,10 +43,26 @@ extension ContentModel {
                 recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
                     if let result = result {
                         var isFinal : Bool!
-                        if result.bestTranscription.formattedString.count < word.count   {
-                            isFinal = false
-                        } else {
+                        let resultString = result.bestTranscription.formattedString
+                        guard let resultedWordsFromRecognizedText = self?.divideSingleWords(text: resultString) else {
+                            print("\(#function) Extracting words from result failed. Pos 1")
+                            self?.recognitionTask?.cancel()
+                            return
+                        }
+                        guard let originalWordThere = self?.originalWord else {
+                            print("\(#function) Getting original word failed. Pos 2")
+                            self?.recognitionTask?.cancel()
+                            return
+                        }
+                        guard let resultedWordsFromOriginal = self?.divideSingleWords(text: originalWordThere) else {
+                            print("\(#function) Extracting words from original word failed. Pos 3")
+                            self?.recognitionTask?.cancel()
+                            return
+                        }
+                        if resultedWordsFromRecognizedText.count == resultedWordsFromOriginal.count {
                             isFinal = true
+                        } else {
+                            isFinal = false
                         }
                         if error != nil || isFinal {
                             self?.stopSpeechEngine()
@@ -52,29 +70,7 @@ extension ContentModel {
                             
                             guard let vocabListIsShown = self?.vocabListIsShown else { return }
                             if !vocabListIsShown {
-                                let charSet : [Character] = ["!",".",",","/",":", "?"]
-                                
-                                let blankResult = (result.bestTranscription.formattedString.lowercased()).filter { !charSet.contains($0) }
-                                print(blankResult)
-                                if blankResult.contains(word.lowercased()) {
-                                    self?.wordColor = Color.green
-                                    self?.shouldSpringWord = true
-                                    self?.win?.play()
-                                    self?.countPoints(points: 30, handler: {
-                                        self?.newWord()
-                                    })
-                                } else {
-                                    self?.gameover?.play()
-                                    self?.wordColor = Color.red
-                                    self?.shouldSpringWord = true
-                                    if (self?.shouldReadAloud)! {
-                                        self?.readAloud(word: (self?.englishWord)!)
-                                    }
-                                    self?.countPoints(points: -30, handler: {
-                                        self?.newWord()
-                                        
-                                    })
-                                }
+                                self?.checkText(text: resultString, id: nil, points: 30)
                             }
                         }
                     }

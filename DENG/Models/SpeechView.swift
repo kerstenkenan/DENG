@@ -15,10 +15,10 @@ struct SpeechView: View {
         HStack {
             VStack {
                 self.arrangeViews()
-                Text("Sprich das englische Wort nach. Hier zählt die richtige Aussprache").font(Font.system(size: 18, weight: .bold, design: .rounded)).foregroundColor(Color.white).multilineTextAlignment(.center).lineLimit(nil).minimumScaleFactor(0.8).padding()
+                Text("Sprich das Wort nach. Hier zählt die richtige Aussprache").font(Font.system(size: 18, weight: .bold, design: .rounded)).foregroundColor(Color.white).multilineTextAlignment(.center).lineLimit(nil).minimumScaleFactor(0.8).padding()
             }.onAppear {
                 if self.content.recognitionTask == nil {
-                    self.content.hearWord(word: self.content.englishWord)
+                    self.content.hearWord(word: self.content.originalWord)
                 }
             }
         }
@@ -31,7 +31,7 @@ struct SpeechView: View {
                     Spacer()
                     VStack {
                         Spacer()
-                        Text(self.content.englishWord).font(Font.system(size: 35, weight: .heavy, design: .rounded))
+                        Text(self.content.originalWord).font(Font.system(size: 35, weight: .heavy, design: .rounded))
                             .lineLimit(2)
                             .multilineTextAlignment(.center)
                             .foregroundColor(self.content.wordColor)

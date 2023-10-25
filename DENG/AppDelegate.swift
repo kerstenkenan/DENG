@@ -14,15 +14,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var content = ContentModel()
         
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-//        let center = UNUserNotificationCenter.current()
-//        center.delegate = self
-//        center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, err in
-//            if let err = err {
-//                print("Granting user notification failed: \(err)")
-//            } else {
-//                print("User notification granted.")
-//            }
-//        }
         UNUserNotificationCenter.current().delegate = self
         application.registerForRemoteNotifications()
         return true
